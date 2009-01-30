@@ -49,5 +49,12 @@ def main():
 	tee()
 
 if __name__ == "__main__":
+	if (sys.platform == "win32"):
+	   cmd = "dir *.* /s/B"
+	   workdir = "C:\\WINDOWS\system32"
+	else: #May be Unix platform. What are good default for OS X ?
+	   cmd = "ls -l"
+	   workdir = "/tmp"
+
 	sys.exit(main())
 
