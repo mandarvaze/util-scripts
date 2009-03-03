@@ -92,7 +92,7 @@ def send_mail(send_from, send_to, subject, text, files=[], server="localhost"):
 
 
 def main():
-    send_mail("mandar.vaze@ixsight.com", mailinglist, "Test Email", ("Dear %s" % fname) + EmailMessage , attachments, smtpserver)
+    send_mail("mandarvaze@gmail.com", mailinglist, "Test Email", ("Dear %s" % fname) + EmailMessage , attachments, smtpserver)
 
     return 0
 
