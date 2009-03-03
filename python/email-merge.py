@@ -59,6 +59,7 @@ This is a test message
 Regards,
 -Mandar
 '''
+sender = "mandarvaze@gmail.com"
 fname = "Agent"  #First Name of the User.
 mailinglist = ["user1@example.com"] #Must be a list as mandated by smtplib
 attachments = ["/home/mandar/file1.jpg","/home/mandar/file2.txt"] #Files to be attached
@@ -92,7 +93,7 @@ def send_mail(send_from, send_to, subject, text, files=[], server="localhost"):
 
 
 def main():
-    send_mail("mandarvaze@gmail.com", mailinglist, "Test Email", ("Dear %s" % fname) + EmailMessage , attachments, smtpserver)
+    send_mail(sender, mailinglist, "Test Email", ("Dear %s" % fname) + EmailMessage , attachments, smtpserver)
 
     return 0
 
