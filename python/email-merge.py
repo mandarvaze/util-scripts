@@ -36,8 +36,7 @@
    Following Program can be used to send the same email (with attachment) to several users
    The Code will read the names and email addresses from a CSV file.
    Format of the CSV file should have following columns (without the headers)
-   FirstName,LastName,EmailID
-   Initial Version does not incorporate this functionality.
+   Name,EmailID
 '''
 
 import smtplib
@@ -47,6 +46,7 @@ from email.MIMEBase import MIMEBase
 from email.MIMEText import MIMEText
 from email.Utils import COMMASPACE, formatdate
 from email import Encoders
+import csv
 
 '''
  To use this program successfully, you need to change the following set of variables to match your setup and requirements.
@@ -56,16 +56,19 @@ from email import Encoders
 EmailMessage = '''
 This is a test message
 
-Regards,
--Mandar
+Sent By,
+-Email Merge Python Program
 '''
-fname = "Agent"  #First Name of the User.
-mailinglist = ["user1@example.com"] #Must be a list as mandated by smtplib
-attachments = ["/home/mandar/file1.jpg","/home/mandar/file2.txt"] #Files to be attached
+
+sender = "sender@domain.com"
+attachments = ["/path/to/file1.jpg","/path/to/file2.txt"] #Files to be attached
 smtpserver = "192.168.0.110" #IP Address or hostname is OK
+csvfilename = 'data.csv'
+
+nameList = []
+mailinglist = []
 
 # Following function taken from http://snippets.dzone.com/posts/show/2038
-# Additional changes done by Mandar Vaze
 
 def send_mail(send_from, send_to, subject, text, files=[], server="localhost"):
   assert type(send_to)==list
@@ -91,8 +94,46 @@ def send_mail(send_from, send_to, subject, text, files=[], server="localhost"):
   smtp.close()
 
 
+def parseCSVfile():
+    f = open(csvfilename)
+    reader = csv.reader(f)
+    headerList = reader.next()
+
+    for line in reader:
+        # Skip blank lines
+        if line:
+            if line[1]: #if emailID is available
+                nameList.append(line[0])
+                mailinglist.append(line[1])
+            else:
+                print "Email ID missing. Email will not be sent to : '%s'" % line[0]
+    f.close()
+
+def extractFirstName(fullName):
+    tokens = fullName.split()
+    cnt = len(tokens)
+
+#   If First Name is less than one or two character long, it is probably initials
+#   In this case, we address the person using the last name
+    if len(tokens[0]) <= 2:
+        address_as = tokens[cnt-1]
+    else:
+        address_as = tokens[0]
+
+    return address_as
+
 def main():
-    send_mail("mandar.vaze@ixsight.com", mailinglist, "Test Email", ("Dear %s" % fname) + EmailMessage , attachments, smtpserver)
+
+    parseCSVfile()
+
+    for index in range(len(mailinglist)):
+        emailID = [] # Must be a list as mandated by smtplib
+        emailID.append(mailinglist[index])
+        address_as_name = extractFirstName(nameList[index])
+        print "Sending email to : %s" % nameList[index]
+        print ".... Addressed as : %s" % address_as_name
+        print ".... At the email address : %s" % mailinglist[index]
+        send_mail(sender, emailID, "Put Subject Line Here", ("Dear %s" % address_as_name) + EmailMessage , attachments, smtpserver)
 
     return 0
 
