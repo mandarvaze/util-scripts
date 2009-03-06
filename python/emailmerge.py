@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-#       email-merge.py
+#       emailmerge.py
 #
 #       Copyright 2009 Mandar Vaze (mandarvaze@gmail.com)
 #
@@ -31,12 +31,15 @@
 #       OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 '''
-  Initial Structure (including the license lines) created by Geany- A fast and Lightweight IDE  (http://www.geany.org/)
+  Developed using Geany- A fast and Lightweight IDE  (http://www.geany.org/)
 
-   Following Program can be used to send the same email (with attachment) to several users
-   The Code will read the names and email addresses from a CSV file.
-   Format of the CSV file should have following columns (without the headers)
-   Name,EmailID
+  Following Program can be used to send the same email (with attachment(s)) to several users
+  The names and email addresses are read from a CSV file.
+
+  The CSV file has following columns
+  FirstName,LastName,EmailID
+
+  Other information is read from INI file. See sample INI file for details
 '''
 
 import smtplib
@@ -47,29 +50,21 @@ from email.MIMEText import MIMEText
 from email.Utils import COMMASPACE, formatdate
 from email import Encoders
 import csv
+import ConfigParser
 
 '''
- To use this program successfully, you need to change the following set of variables to match your setup and requirements.
+ To use this program successfully, you need to update emailmerge.ini to match your setup and requirements.
  The email addresses, files or the SMTP host IP will not work in your setup
- It is provided here only as reference
-'''
-EmailMessage = '''
-This is a test message
-
-Sent By,
--Email Merge Python Program
 '''
 
-sender = "sender@domain.com"
-attachments = ["/path/to/file1.jpg","/path/to/file2.txt"] #Files to be attached
-smtpserver = "192.168.0.110" #IP Address or hostname is OK
-csvfilename = 'data.csv'
+# TODO : Allow the INI file to be passed as Command Line Argument
+# Currently it is hard coded, and must be in same folder as this program
+configfile = "emailmerge.ini"
 
 nameList = []
 mailinglist = []
 
 # Following function taken from http://snippets.dzone.com/posts/show/2038
-
 def send_mail(send_from, send_to, subject, text, files=[], server="localhost"):
   assert type(send_to)==list
   assert type(files)==list
@@ -95,14 +90,14 @@ def send_mail(send_from, send_to, subject, text, files=[], server="localhost"):
 
 
 def parseCSVfile():
-    f = open(csvfilename)
+    f = open(csvpath)
     reader = csv.reader(f)
     headerList = reader.next()
 
     for line in reader:
-        # Skip blank lines
+        # test for True in case there is a blank line
         if line:
-            if line[1]: #if emailID is available
+            if line[1]: #if email is empty, skip
                 nameList.append(line[0])
                 mailinglist.append(line[1])
             else:
@@ -122,8 +117,30 @@ def extractFirstName(fullName):
 
     return address_as
 
+def readConfigFile(configfilepath):
+
+# If we do not use global keyword, then these are treated as local varibles,
+# and all the assignments done here are wiped off as soon as you exit this function
+    global sender
+    global smtpserver
+    global csvpath
+    global attachments
+    global EmailMessage
+    global subject
+
+    cfg = ConfigParser.ConfigParser()
+    cfg.read(configfilepath)
+    sender = cfg.get("email","sender")
+    smtpserver = cfg.get("email","smtpserver")
+    EmailMessage = cfg.get("email","msg")
+    subject = cfg.get("email","subj")
+    csvpath = cfg.get("data","csv")
+    attachments = cfg.get("data","attach").split(",")
+
+
 def main():
 
+    readConfigFile(configfile)
     parseCSVfile()
 
     for index in range(len(mailinglist)):
@@ -133,7 +150,7 @@ def main():
         print "Sending email to : %s" % nameList[index]
         print ".... Addressed as : %s" % address_as_name
         print ".... At the email address : %s" % mailinglist[index]
-        send_mail(sender, emailID, "Put Subject Line Here", ("Dear %s" % address_as_name) + EmailMessage , attachments, smtpserver)
+        send_mail(sender, emailID, subject, ("Dear %s" % address_as_name) + EmailMessage , attachments, smtpserver)
 
     return 0
 
