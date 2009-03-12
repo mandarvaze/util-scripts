@@ -65,7 +65,7 @@ nameList = []
 mailinglist = []
 
 # Following function taken from http://snippets.dzone.com/posts/show/2038
-def send_mail(send_from, send_to, subject, text, files=[], server="localhost"):
+def send_mail(send_from, send_to, subject, text, msgtype, files=[], server="localhost"):
   assert type(send_to)==list
   assert type(files)==list
 
@@ -75,8 +75,11 @@ def send_mail(send_from, send_to, subject, text, files=[], server="localhost"):
   msg['Date'] = formatdate(localtime=True)
   msg['Subject'] = subject
 
-  msg.attach( MIMEText(text) )
-
+  if (msgtype == 'html'):
+    msg.attach( MIMEText(text, 'html'))
+  else:
+    msg.attach( MIMEText(text, 'plain'))
+	
   for f in files:
     part = MIMEBase('application', "octet-stream")
     part.set_payload( open(f,"rb").read() )
@@ -133,10 +136,10 @@ def readConfigFile(configfilepath):
     sender = cfg.get("email","sender")
     smtpserver = cfg.get("email","smtpserver")
     EmailMessage = cfg.get("email","msg")
+# TODO : Add Code to read messge type from INI File
     subject = cfg.get("email","subj")
     csvpath = cfg.get("data","csv")
     attachments = cfg.get("data","attach").split(",")
-
 
 def main():
 
@@ -150,8 +153,11 @@ def main():
         print "Sending email to : %s" % nameList[index]
         print ".... Addressed as : %s" % address_as_name
         print ".... At the email address : %s" % mailinglist[index]
-        send_mail(sender, emailID, subject, ("Dear %s" % address_as_name) + EmailMessage , attachments, smtpserver)
-
+# TODO : Based on messge type, change following line for either plain text or HTML text
+#        if (mesgtype == 'html):
+        send_mail(sender, emailID, subject, ("<font face=\"Helvetica, Arial, sans-serif\">Dear %s" % address_as_name) + EmailMessage +"</font>", 'html', attachments, smtpserver)
+#        else:
+#            send_mail(sender, emailID, subject, ("Dear %s" % address_as_name) + EmailMessage, 'plain', attachments, smtpserver)			
     return 0
 
 if __name__ == '__main__': main()
